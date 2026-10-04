@@ -25,13 +25,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $serv->save();
+
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    $search = trim($_GET['search'] ?? '');
-    $filter = $_GET['filter'] ?? 'All';
+    if (isset($_GET['action']) && $_GET['action'] === 'edit') {
 
-    $posts = $repo->fetchFilteredPosts($search, $filter);
+    }
 
-    if (isset($_GET['ajax']) && $_GET['ajax'] === 'true') {
+    if (isset($_GET['request']) && $_GET['request'] === 'filter') {
+        $search = trim($_GET['search'] ?? '');
+        $filter = $_GET['filter'] ?? 'All';
+
+        $posts = $repo->fetchFilteredPosts($search, $filter);
+
         require __DIR__ . '/template/posts-table.php';
         exit;
     }
@@ -93,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </tr>
                             </thead>
                             <tbody id="postsTableBody">
-                                <?php require __DIR__ . '/template/post-table.php'; ?>
+                                <?php require __DIR__ . '/template/posts-table.php'; ?>
                             </tbody>
                         </table>
                     </div>
@@ -272,11 +277,12 @@ document.getElementById('addPostBtn').addEventListener('click', () => {
     document.getElementById('postModal').classList.add('open');
 });
 
-// Upload image preview
+// Upload image preview and remove image preview
 const uploadImageBtn = document.getElementById('uploadImageBtn');
 const featuredImage = document.getElementById('featuredImage');
 const imagePreview = document.getElementById('imagePreview');
 const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+const removeImageBtn = document.getElementById('removeImageBtn');
 
 uploadImageBtn.addEventListener('click', () => {
     featuredImage.click();
@@ -360,13 +366,13 @@ const postsTable = document.querySelector('.posts-table');
 
 async function loadPosts() {
     const params = new URLSearchParams({
-        ajax: 'true',
+        request: 'filter',
         search: postSearch.value.trim(),
         filter: postFilter.value
     });
 
     try {
-        const response = await (`post.php?${params}`);
+        const response = await fetch(`posts.php?${params}`);
 
         if (!response.ok) {
             Swal.fire({
@@ -377,10 +383,10 @@ async function loadPosts() {
         }
 
         const html = await response.text();
-        oldBody = document.getElementById('postsTableBody');
-        oldBody.outerHTML = html;
+        const tableBody = document.getElementById('postsTableBody');
+        tableBody.innerHTML = html;
         
-        lucede.createIcons(); 
+        lucide.createIcons(); 
     } catch (error) {
         console.error(error);
 
@@ -393,6 +399,7 @@ async function loadPosts() {
 }
 
 applyPostFilter.addEventListener('click', loadPosts);
+
 
 
 // AJAX

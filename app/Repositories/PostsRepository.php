@@ -88,36 +88,36 @@ final class PostsRepository {
         $query = 'SELECT posts.*, categories.name AS category FROM posts
             JOIN categories ON posts.category_id = categories.id
             WHERE 1 = 1
-            AND status != 0';
+            AND posts.active != 0';
         $params = [];
 
         if ($search !== '') {
-            $query .= 'AND title LIKE :search';
+            $query .= ' AND title LIKE :search';
             $params['search'] = "%{$search}%";
         }
 
         switch (strtolower($filter)) {
             case 'published':
-                $query .= ' AND status = published
-                    AND published_at <= CURRENT_TIMESTAMP';
+                $query .= " AND status = 'published'
+                    AND published_at <= CURRENT_TIMESTAMP";
                 break;
             case 'pending': 
-                $query .= ' AND status = published
-                    AND published_at > CURRENT_TIMESTAMP';
+                $query .= " AND status = 'published'
+                    AND published_at > CURRENT_TIMESTAMP";
                 break;
             case 'draft': 
-                $query .= ' AND status = draft
-                    AND archived_at = NULL';
+                $query .= " AND status = 'draft'
+                    AND archived_at IS NULL";
                 break;
             case 'archived':
-                $query .= ' AND archied_at != NULL';
+                $query .= ' AND archived_at IS NOT NULL';
                 break;
         }
 
         $query .= ' ORDER BY updated_at DESC';
 
         $stmt = $this->conn->prepare($query);
-        $stmt->execute();
+        $stmt->execute($params);
         
         return $stmt->fetchAll(PDO::FETCH_ASSOC);
     }

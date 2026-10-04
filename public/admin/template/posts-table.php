@@ -1,4 +1,7 @@
-<?php $posts = $posts ?? []; ?>
+<?php
+use Core\Token;
+$posts = $posts ?? []; 
+?>
 
 <?php if (empty($posts)): ?>
     <tr>
@@ -26,13 +29,10 @@
                 <div class="action-buttons">
                     <form method="get">
                         <input type="hidden" name="post_id" value="<?= (string) $post['id'] ?>">
-                        <button type="submit" class="action-btn" title="Edit">
+                        <button type="submit" name="action" value="edit" class="action-btn" title="Edit">
                             <i data-lucide="pencil"></i>
                         </button>
                     </form>
-                    <button class="action-btn" data-action="edit" data-id="<?= e((string) $post['id']) ?>" title="Edit">
-                        <i data-lucide="pencil"></i>
-                    </button>
                     <form method="post" class="post-action-form">
                         <input type="hidden" name="<?= e(Token::CSRF_KEY) ?>" value="<?= e(Token::generate()) ?>">
                         <input type="hidden" name="post_id" value="<?= (string) $post['id'] ?>">
