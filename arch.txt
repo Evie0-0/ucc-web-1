@@ -1,0 +1,80 @@
+Does the operation require replacing the entire page?
+│
+├── YES
+│    └── Normal navigation / normal GET
+│
+└── NO
+     │
+     ├── Is it retrieving/changing displayed data?
+     │       └── GET + fetch → HTML fragment or JSON
+     │
+     └── Is it modifying server data?
+             └── POST + fetch → JSON
+
+
+
+
+GET
+├── Full page → normal request
+└── Partial page change → fetch()
+
+POST
+└── Data-changing operation → fetch() + JSON
+
+
+
+
+PHP
+├── routing
+├── validation
+├── authorization
+├── database operations
+└── HTML rendering
+
+JavaScript
+├── intercept AJAX forms
+├── send fetch()
+├── receive JSON/HTML
+├── modify relevant DOM
+└── display UI feedback
+
+Session
+└── authentication + genuinely session-level state
+
+Database
+└── persistent application data
+
+
+
+
+Authentication
+    → normal POST + redirect
+
+Page-to-page navigation
+    → normal navigation
+
+Filtering/searching
+    → fetch() + partial HTML
+
+Saving/editing/archive/delete
+    → fetch() + JSON
+
+Small UI changes
+    → JavaScript/DOM
+
+
+
+| Code    | Meaning               | Use when                                                           |
+| ------- | --------------------- | ------------------------------------------------------------------ |
+| **200** | OK                    | General successful request                                         |
+| **201** | Created               | Successfully created a new resource                                |
+| **204** | No Content            | Successful operation with no response body                         |
+| **400** | Bad Request           | Malformed or invalid request                                       |
+| **401** | Unauthorized          | User is not authenticated/logged in                                |
+| **403** | Forbidden             | User is authenticated but lacks permission                         |
+| **404** | Not Found             | Requested resource doesn't exist                                   |
+| **405** | Method Not Allowed    | HTTP method isn't supported                                        |
+| **409** | Conflict              | Request conflicts with existing/current state, e.g. duplicate slug |
+| **422** | Unprocessable Content | Form/input validation failed                                       |
+| **500** | Internal Server Error | Unexpected server-side error                                       |
+| **503** | Service Unavailable   | Server/service is temporarily unavailable                          |
