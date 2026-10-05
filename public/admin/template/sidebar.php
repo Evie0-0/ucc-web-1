@@ -49,7 +49,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </button>
         <div class="submenu">
             <a href="Executive-Officials.html">Executive Officials</a>
-            <a href="Board-of-Regents.html">Board of Regents</a>
+            <a href="/admin/bor.php">Board of Regents</a>
         </div>
     </div>
 

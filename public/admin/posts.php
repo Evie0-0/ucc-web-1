@@ -19,26 +19,42 @@ $repo = new PostsRepository(Database::connect());
 $posts = $repo->fetchFilteredPosts('', 'All');
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!Token::verify($_POST[Token::CSRF_KEY] ?? null)) {
+    if (!Token::verify($_POST['csrf_key'] ?? null)) {
         header('Location: /404.php');
         exit('Invalid csrf token.');
     }
 
-    $serv->save();
+    $action = $_POST['action'];
 
-} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    if (isset($_GET['action']) && $_GET['action'] === 'edit') {
-
+    switch ($action) {
+        case 'save': 
+            $serv->save();
+            break;
+        case 'archive':
+            $serv->archive();
+            break;
+        case 'remove':
+            $serv->remove();
+            break;
+        default:
+            jsonResponse(400, 'Invalid request.');
     }
 
-    if (isset($_GET['request']) && $_GET['request'] === 'filter') {
-        $search = trim($_GET['search'] ?? '');
-        $filter = $_GET['filter'] ?? 'All';
 
-        $posts = $repo->fetchFilteredPosts($search, $filter);
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    if (isset($_GET['request'])) {
+        $request = $_GET['request'];
 
-        require __DIR__ . '/template/posts-table.php';
-        exit;
+        switch ($request) {
+            case 'filter':
+                $serv->filter();
+                break;
+            case 'edit':
+                $serv->edit();
+                break;
+            default:
+                jsonResponse(400, 'Invalid request.');
+        }
     }
 }
 ?>
@@ -75,7 +91,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <option value="Published">Published</option>
                             <option value="Draft">Draft</option>
                             <option value="Pending">Pending</option>
-                            <option value="Archived">Archived</option>
                         </select>
                         <button type="button" id="applyPostFilter">Search</button>
                     </div>
@@ -90,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <span class="posts-count" id="postsCount"><?= count($posts ?? []) ?> <?= count($posts ?? []) <= 1 ? 'post' : 'posts' ?></span>
                     </div>
                     <div class="posts-table-wrap">
-                        <table class="posts-table">
+                        <table class="posts-table" id="postsTable">
                             <thead>
                                 <tr>
                                     <th>Featured Image</th><th>Title</th><th>Category</th>
@@ -112,14 +127,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <h2 id="postFormTitle">Add New Post</h2>
                                 <p>Create or edit a post.</p>
                             </div>
-                            <button class="modal-close" type="button" data-close-modal aria-label="Close">
+                            <button class="modal-close" id="modalClose" type="button" aria-label="Close">
                                 <i data-lucide="x"></i>
                             </button>
                         </div>
 
                         <form method="post" class="post-form" id="postForm">
-                            <input type="hidden" name="<?= e(Token::CSRF_KEY) ?>" value="<?= e(Token::generate()) ?>">
-                            <input type="hidden" name="post_id" value="<?= e((string) ($_GET['id'] ?? 0))?>">
+                            <input type="hidden" name="csrf_key" value="<?= e(Token::generate()) ?>">
+                            <input type="hidden" name="post_id" value="0" id="postId">
+                            <input type="hidden" name="remove_image" value="0" id="removeImage">
 
                             <div class="image-upload-area">
                                 <div class="upload-placeholder" id="uploadPlaceholder">
@@ -132,7 +148,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <button type="button" class="post-btn post-btn-ghost" id="uploadImageBtn">
                                     <i data-lucide="upload"></i> Upload Image
                                 </button>
-                                <button type="button" id="removeImageBtn">Remove</button>
+                                <button type="button" id="removeImageBtn" hidden>Remove Image</button>
                             </div>
 
                             <div class="form-grid">
@@ -152,9 +168,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                     </select>
                                 </label>
                                 <label>Slug</label>
-                                <input type="text" name="slug" required>
+                                <input type="text" name="slug" id="postSlug" required>
                                 <label>Excerpt</label>
-                                <input type="text" name="excerpt">
+                                <input type="text" name="excerpt" id="postExcerpt">
                             </div>
 
                             <div>
@@ -164,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </div>
 
                             <div class="form-actions">
-                                <button type="button" class="post-btn post-btn-ghost" id="cancelPostBtn" data-close-modal>Cancel</button>
+                                <button type="button" class="post-btn post-btn-ghost" id="cancelPostBtn">Cancel</button>
                                 <div>
                                     <button type="submit" name="action" value="save" class="post-btn post-btn-primary">Save</button>
                                 </div>
@@ -177,85 +193,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 </main>
 </div>
-<script>
- /*
-document.addEventListener("DOMContentLoaded", () => {
-    const posts = [
-        {id:1,title:"University of Caloocan City News",category:"News",date:"2026-09-10",views:1240,status:"Published",image:"",content:"<p>Write your post content here...</p>"},
-        {id:2,title:"Important University Announcement",category:"Announcement",date:"2026-09-08",views:865,status:"Published",image:"",content:"<p>Write your post content here...</p>"},
-        {id:3,title:"Upcoming University Event",category:"Event",date:"2026-09-20",views:0,status:"Pending",image:"",content:"<p>Write your post content here...</p>"},
-        {id:4,title:"Student Activities Update",category:"News",date:"2026-09-05",views:0,status:"Draft",image:"",content:"<p>Write your post content here...</p>"},
-        {id:5,title:"Archived University Notice",category:"Announcement",date:"2026-08-28",views:0,status:"Archived",image:"",content:"<p>Write your post content here...</p>"}
-    ];
-
-    let editingId = null;
-    const $ = id => document.getElementById(id);
-    const tableBody=$("postsTableBody"), search=$("postSearch"), filter=$("postFilter");
-    const modal=$("postModal"), form=$("postForm"), file=$("featuredImage"), preview=$("imagePreview");
-    const placeholder=$("uploadPlaceholder"), toast=$("uiToast"), content=$("postContent");
-
-    const escapeHtml = v => String(v).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
-    const formatDate = d => d ? new Date(d+"T00:00:00").toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"}) : "—";
-
-    function render(){
-        const q=search.value.trim().toLowerCase(), f=filter.value;
-        const list=posts.filter(p=>(p.title.toLowerCase().includes(q)||p.category.toLowerCase().includes(q))&&(f==="All"||p.status===f));
-        $("postsCount").textContent=`${list.length} ${list.length===1?"post":"posts"}`;
-        tableBody.innerHTML=list.length ? list.map(p=>`
-            <tr>
-                <td><div class="featured-thumb">${p.image?`<img src="${p.image}" alt="">`:`<i data-lucide="image"></i>`}</div></td>
-                <td class="post-title-cell">${escapeHtml(p.title)}</td>
-                <td class="category-text">${escapeHtml(p.category)}</td>
-                <td>${formatDate(p.date)}</td><td>${p.views.toLocaleString()}</td>
-                <td><span class="status-badge status-${p.status.toLowerCase()}">${escapeHtml(p.status)}</span></td>
-                <td><div class="action-buttons">
-                    <button class="action-btn" data-action="edit" data-id="${p.id}" title="Edit"><i data-lucide="pencil"></i></button>
-                    <button class="action-btn archive" data-action="archive" data-id="${p.id}" title="Archive"><i data-lucide="archive"></i></button>
-                    <button class="action-btn delete" data-action="delete" data-id="${p.id}" title="Delete"><i data-lucide="trash-2"></i></button>
-                </div></td>
-            </tr>`).join("") : `<tr><td colspan="7" class="empty-row">No posts found.</td></tr>`;
-        lucide.createIcons();
-    }
-
-    function openModal(p=null){
-        editingId=p?.id||null;
-        $("postFormTitle").textContent=p?"Edit Post":"Add New Post";
-        $("postTitle").value=p?.title||"";$("postCategory").value=p?.category||"News";
-        $("postDate").value=p?.date||"";$("postStatus").value=p?.status==="Archived"?"Draft":(p?.status||"Draft");
-        content.innerHTML=p?.content||"<p>Write your post content here...</p>";
-        if(p?.image){preview.src=p.image;preview.style.display="block";placeholder.style.display="none"}else{preview.removeAttribute("src");preview.style.display="none";placeholder.style.display="flex"}
-        modal.classList.add("open");modal.setAttribute("aria-hidden","false");lucide.createIcons();
-    }
-    function closeModal(){modal.classList.remove("open");modal.setAttribute("aria-hidden","true");editingId=null;form.reset();content.innerHTML="<p>Write your post content here...</p>";preview.removeAttribute("src");preview.style.display="none";placeholder.style.display="flex"}
-    function notify(msg){toast.textContent=msg;toast.classList.add("show");clearTimeout(notify.t);notify.t=setTimeout(()=>toast.classList.remove("show"),2200)}
-
-    function save(status){
-        const data={title:$("postTitle").value.trim()||"Untitled Post",category:$("postCategory").value,date:$("postDate").value,views:editingId?(posts.find(p=>p.id===editingId)?.views||0):0,status,content:content.innerHTML,image:preview.src||""};
-        if(editingId){Object.assign(posts.find(p=>p.id===editingId),data);notify(status==="Published"?"Post updated and published.":"Draft updated.")}
-        else{posts.unshift({id:Date.now(),...data});notify(status==="Published"?"Post published.":"Draft saved.")}
-        render();closeModal();
-    }
-
-    $("addPostBtn").onclick=()=>openModal();
-    search.oninput=render;filter.onchange=render;
-    tableBody.onclick=e=>{
-        const b=e.target.closest("[data-action]");if(!b)return;
-        const p=posts.find(x=>x.id===Number(b.dataset.id));if(!p)return;
-        if(b.dataset.action==="edit")openModal(p);
-        if(b.dataset.action==="archive"){p.status=p.status==="Archived"?"Draft":"Archived";render();notify(p.status==="Archived"?"Post archived.":"Post moved back to Draft.")}
-        if(b.dataset.action==="delete"&&confirm(`Delete "${p.title}"?`)){posts.splice(posts.indexOf(p),1);render();notify("Post deleted from the UI.")}
-    };
-    document.querySelectorAll("[data-close-modal]").forEach(b=>b.onclick=closeModal);
-    $("saveDraftBtn").onclick=()=>save("Draft");
-    form.onsubmit=e=>{e.preventDefault();save("Published")};
-    $("uploadImageBtn").onclick=()=>file.click();
-    file.onchange=()=>{const f=file.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{preview.src=e.target.result;preview.style.display="block";placeholder.style.display="none"};r.readAsDataURL(f)};
-    document.querySelectorAll(".editor-toolbar button").forEach(b=>b.onclick=()=>{content.focus();document.execCommand(b.dataset.command,false,null)});
-    document.onkeydown=e=>{if(e.key==="Escape"&&modal.classList.contains("open"))closeModal()};
-    render();
-});
-  */
-</script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script> 
 <script>
 let formDirty = false;
@@ -283,6 +220,13 @@ const featuredImage = document.getElementById('featuredImage');
 const imagePreview = document.getElementById('imagePreview');
 const uploadPlaceholder = document.getElementById('uploadPlaceholder');
 const removeImageBtn = document.getElementById('removeImageBtn');
+const removeImage = document.getElementById('removeImage');
+
+function updateRemoveImageBtn() {
+    removeImageBtn.hidden = !imagePreview.getAttribute('src');
+}
+
+updateRemoveImageBtn();
 
 uploadImageBtn.addEventListener('click', () => {
     featuredImage.click();
@@ -300,6 +244,9 @@ featuredImage.addEventListener('change', () => {
     imagePreview.src = URL.createObjectURL(file);
     imagePreview.style.display = 'block';
     uploadPlaceholder.style.display = 'none';
+    removeImage.value = '0';
+
+    updateRemoveImageBtn();
 });
 
 removeImageBtn.addEventListener('click', () => {
@@ -307,22 +254,10 @@ removeImageBtn.addEventListener('click', () => {
     imagePreview.removeAttribute('src');
     imagePreview.style.display = 'none';
     uploadPlaceholder.style.display = 'flex';
-
+    document.getElementById('removeImage').value = '1';
     formDirty = true;
-});
 
-// Require publish date when status is published
-const postStatus = document.getElementById('postStatus');
-const postDate = document.getElementById('postDate');
-
-postStatus.addEventListener('change', () => {
-    formDirty = true;
-    postDate.required = postStatus.value === 'published';
-});
-
-// X closes immediately
-document.querySelector('.modal-close').addEventListener('click', () => {
-    document.getElementById('postModal').classList.remove('open');
+    updateRemoveImageBtn();
 });
 
 // Dirty checker
@@ -336,39 +271,20 @@ postForm.addEventListener('change', () => {
     formDirty = true;
 });
 
-
-// Cancel checks for unsaved changes
-document.getElementById('cancelPostBtn').addEventListener('click', () => {
-
-    if (!formDirty) {
-        document.getElementById('postModal').classList.remove('open');
-        return;
-    }
-
-    Swal.fire({
-        title: 'Discard changes?',
-        text: 'You have unsaved changes.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Discard',
-        cancelButtonText: 'Keep editing'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            window.location.reload();            
-        }
-    });
-});
-
 // Filter & search
 const postSearch = document.getElementById('postSearch');
 const postFilter = document.getElementById('postFilter');
-const postsTable = document.querySelector('.posts-table');
+const applyPostFilter = document.getElementById('applyPostFilter');
+const postIdEditing = document.getElementById('postId');
+const postsTableBody = document.getElementById('postsTableBody');
+const postsCount = document.getElementById('postsCount');
 
 async function loadPosts() {
     const params = new URLSearchParams({
         request: 'filter',
         search: postSearch.value.trim(),
-        filter: postFilter.value
+        filter: postFilter.value,
+        editing_id: postIdEditing.value
     });
 
     try {
@@ -380,12 +296,14 @@ async function loadPosts() {
                 title: 'Error',
                 text: 'Failed to load posts'
             });
+
+            return
         }
 
-        const html = await response.text();
-        const tableBody = document.getElementById('postsTableBody');
-        tableBody.innerHTML = html;
-        
+        const result = await response.json();
+        postsTableBody.innerHTML = result.html;
+        postsCount.textContent = `${result.count} ${result.count === 1 ? 'post' : 'posts'}`;
+
         lucide.createIcons(); 
     } catch (error) {
         console.error(error);
@@ -400,9 +318,229 @@ async function loadPosts() {
 
 applyPostFilter.addEventListener('click', loadPosts);
 
+// Close modal / discard editing
+function closePostModal() {
+    if (!formDirty) {
+        window.location.reload();
+        return;
+    }
 
+    Swal.fire({
+        title: 'Discard changes?',
+        text: 'Your current work will be lost.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Discard',
+        cancelButtonText: 'Keep editing'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.reload();
+        }
+    });
+}
 
-// AJAX
+document.getElementById('modalClose').addEventListener('click', closePostModal);
+document.getElementById('cancelPostBtn').addEventListener('click', closePostModal);
+
+// List actions
+postsTableBody.addEventListener('click', async (event) => {
+    // Check which button is clicked
+    const editButton = event.target.closest('.edit-post-btn');
+    const archiveButton = event.target.closest('.archive');
+    const deleteButton = event.target.closest('.delete');
+
+    if (archiveButton) {
+        event.preventDefault();
+
+        const result = await Swal.fire({
+            title: 'Archive post?',
+            text: 'This post will be moved to the archive.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, archive it',
+            cancelButtonText: 'Cancel'
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        const form = archiveButton.closest('.post-action-form');
+        const postId = form.querySelector('input[name="post_id"]').value;
+        const csrfToken = form.querySelector('input[name="csrf_key"]').value; 
+        
+        try {
+            const response = await fetch('posts.php', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    action: 'archive',
+                    post_id: postId,
+                    csrf_key: csrfToken
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message
+                });
+
+                return;
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: result.message
+            });
+
+            loadPosts();
+        } catch (error) {
+            console.error(error);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Unable to communicate with the server.'
+            });
+        }
+
+        return;
+    }
+
+    if (deleteButton) {
+        event.preventDefault();
+        
+        const result = await Swal.fire({
+            title: 'Delete post?',
+            text: 'This post will be removed and will no longer appear here.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, delete it',
+            cancelButtonText: 'Cancel'
+        });
+
+        if (!result.isConfirmed) {
+            return;
+        }
+
+        const form = deleteButton.closest('.post-action-form');
+        const postId = form.querySelector('input[name="post_id"]').value;
+        const csrfToken = form.querySelector('input[name="csrf_key"]').value;
+
+        try {
+            const response = await fetch('posts.php', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    action: 'remove',
+                    post_id: postId,
+                    csrf_key: csrfToken
+                })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+               Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: result.message
+                });
+
+                return;
+            }
+
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: result.message
+            });
+
+            loadPosts();
+        } catch (error) {
+            console.error(error);
+
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Unable to communicate with the server.'
+            });   
+        }
+
+        return;
+    }
+
+    // Edit
+    if (!editButton) {
+        return;
+    }
+
+    // Get post to edit
+    const postId = editButton.dataset.postId;
+
+    try {
+        const params = new URLSearchParams({
+            request: 'edit',
+            post_id: postId
+        });
+
+        const response = await fetch(`posts.php?${params}`);
+        const result = await response.json();
+        
+        if (!response.ok) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Cannot find post to edit.'
+            });
+
+            return;
+        }
+
+        const post = result.post;
+        document.getElementById('postFormTitle').textContent = 'Edit Post';
+        document.getElementById('postTitle').value = post.title;
+        document.getElementById('postCategory').value = post.category_id;
+        document.getElementById('postDate').value = post.published_at ? post.published_at.substring(0, 10) : '';
+        document.getElementById('postStatus').value = post.status;
+        document.getElementById('postSlug').value = post.slug;
+        document.getElementById('postExcerpt').value = post.excerpt ?? '';
+        quill.clipboard.dangerouslyPasteHTML(post.content ?? '');
+        document.getElementById('postId').value = post.id;
+
+        if (post.featured_image) {
+            imagePreview.src = '/admin/storage/uploads/' + post.featured_image;
+            imagePreview.style.display = 'block';
+            uploadPlaceholder.style.display = 'none';
+        } else {
+            imagePreview.removeAttribute('src');
+            imagePreview.style.display = 'none';
+            uploadPlaceholder.style.display = 'flex';
+        }
+
+        document.getElementById('removeImage').value = '0';
+
+        updateRemoveImageBtn();
+
+        formDirty = false;
+        document.getElementById('postModal').classList.add('open');
+
+        loadPosts();
+    } catch (error) {
+        console.error(error);
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'Unable to communicate with the server.'
+        });
+    }
+});
+
+// Post form
 postForm.addEventListener('submit', async (event) => {
     event.preventDefault();
 
