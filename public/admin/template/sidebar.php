@@ -49,7 +49,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
         </button>
         <div class="submenu">
             <a href="Executive-Officials.html">Executive Officials</a>
-            <a href="/admin/bor.php">Board of Regents</a>
+            <a href="/admin/bor.php" >Board of Regents</a>
         </div>
     </div>
 
@@ -62,9 +62,8 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <i data-lucide="chevron-down" class="arrow"></i>
         </button>
         <div class="submenu">
-            <a href="Campuses.html">Campuses</a>
-            <a href="Contact-Information.html">Contact Information</a>
-            <a href="Quick-Links.html">Quick Links</a>
+            <a href="About-UCC.html">About UCC</a>
+            <a href="/admin/eserv.php" class="<?= $currentPage === 'eserv.php' ? 'active' : '' ?>">E-Services</a> 
         </div>
     </div>
 </nav>

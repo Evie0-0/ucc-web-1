@@ -91,6 +91,7 @@ final class PostsService {
             }
         }
 
+        // Won't run if filename is null (no value in $_FILES)
         if (isset($_FILES['featured_image']) && $_FILES['featured_image']['error'] !== UPLOAD_ERR_NO_FILE) {
             try {
                 $image = new UploadedImage();
@@ -107,7 +108,7 @@ final class PostsService {
                 ); 
             } catch (RuntimeException $e) {
                 error_log($e->getMessage());
-                jsonResponse(500, 'An unexpected error occured while processing the image.');
+                jsonResponse(500, 'An unexpected error occurred while processing the image.');
             }
         }
 
@@ -183,23 +184,27 @@ final class PostsService {
     }
 
     public function archive() {
-        if ((int) ($_POST['post_id']) === 0) {
+        $postId = (int) ($_POST['post_id'] ?? 0);
+
+        if ($postId === 0) {
             jsonResponse(400, 'Invalid post ID.');
         }      
 
         $repo = new PostsRepository(Database::connect());
-        $repo->archivePost((int) $_POST['post_id']);
+        $repo->archivePost($postId);
 
         jsonResponse(200, 'Post successfully archived.');
     }
 
     public function remove() {
-        if ((int) ($_POST['post_id']) === 0) {
+        $postId = (int) ($_POST['post_id'] ?? 0);
+        
+        if ($postId === 0) {
             jsonResponse(400, 'Invalid post ID.');
         }
 
         $repo = new PostsRepository(Database::connect());
-        $repo->inactivePost((int) $_POST['post_id']);
+        $repo->inactivePost($postId);
 
         jsonResponse(200, 'Post successfully removed.');
     }

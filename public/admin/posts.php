@@ -132,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             </button>
                         </div>
 
-                        <form method="post" class="post-form" id="postForm">
+                        <form method="post" enctype="multipart/form-data" class="post-form" id="postForm">
                             <input type="hidden" name="csrf_key" value="<?= e(Token::generate()) ?>">
                             <input type="hidden" name="post_id" value="0" id="postId">
                             <input type="hidden" name="remove_image" value="0" id="removeImage">
@@ -240,7 +240,6 @@ featuredImage.addEventListener('change', () => {
     }
 
     formDirty = true;
-
     imagePreview.src = URL.createObjectURL(file);
     imagePreview.style.display = 'block';
     uploadPlaceholder.style.display = 'none';
@@ -391,7 +390,7 @@ postsTableBody.addEventListener('click', async (event) => {
                 return;
             }
 
-            Swal.fire({
+            await Swal.fire({
                 icon: 'success',
                 title: 'Success',
                 text: result.message
@@ -453,7 +452,7 @@ postsTableBody.addEventListener('click', async (event) => {
                 return;
             }
 
-            Swal.fire({
+            await Swal.fire({
                 icon: 'success',
                 title: 'Success',
                 text: result.message
@@ -474,70 +473,71 @@ postsTableBody.addEventListener('click', async (event) => {
     }
 
     // Edit
-    if (!editButton) {
-        return;
-    }
+    if (editButton) {
+        // Get post to edit
+        const postId = editButton.dataset.postId;
 
-    // Get post to edit
-    const postId = editButton.dataset.postId;
+        try {
+            const params = new URLSearchParams({
+                request: 'edit',
+                post_id: postId
+            });
 
-    try {
-        const params = new URLSearchParams({
-            request: 'edit',
-            post_id: postId
-        });
+            const response = await fetch(`posts.php?${params}`);
+            const result = await response.json();
+            
+            if (!response.ok) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Cannot find post to edit.'
+                });
 
-        const response = await fetch(`posts.php?${params}`);
-        const result = await response.json();
-        
-        if (!response.ok) {
+                return;
+            }
+
+            const post = result.post;
+            document.getElementById('postFormTitle').textContent = 'Edit Post';
+            document.getElementById('postTitle').value = post.title;
+            document.getElementById('postCategory').value = post.category_id;
+            document.getElementById('postDate').value = post.published_at ? post.published_at.substring(0, 10) : '';
+            document.getElementById('postStatus').value = post.status;
+            document.getElementById('postSlug').value = post.slug;
+            document.getElementById('postExcerpt').value = post.excerpt ?? '';
+            quill.clipboard.dangerouslyPasteHTML(post.content ?? '');
+            document.getElementById('postId').value = post.id;
+
+            if (post.featured_image) {
+                imagePreview.src = '/admin/storage/uploads/' + post.featured_image;
+                imagePreview.style.display = 'block';
+                uploadPlaceholder.style.display = 'none';
+            } else {
+                imagePreview.removeAttribute('src');
+                imagePreview.style.display = 'none';
+                uploadPlaceholder.style.display = 'flex';
+            }
+
+            document.getElementById('removeImage').value = '0';
+
+            updateRemoveImageBtn();
+
+            formDirty = false;
+            document.getElementById('postModal').classList.add('open');
+
+            loadPosts();
+        } catch (error) {
+            console.error(error);
+
             Swal.fire({
                 icon: 'error',
                 title: 'Error',
-                text: 'Cannot find post to edit.'
+                text: 'Unable to communicate with the server.'
             });
-
-            return;
         }
 
-        const post = result.post;
-        document.getElementById('postFormTitle').textContent = 'Edit Post';
-        document.getElementById('postTitle').value = post.title;
-        document.getElementById('postCategory').value = post.category_id;
-        document.getElementById('postDate').value = post.published_at ? post.published_at.substring(0, 10) : '';
-        document.getElementById('postStatus').value = post.status;
-        document.getElementById('postSlug').value = post.slug;
-        document.getElementById('postExcerpt').value = post.excerpt ?? '';
-        quill.clipboard.dangerouslyPasteHTML(post.content ?? '');
-        document.getElementById('postId').value = post.id;
-
-        if (post.featured_image) {
-            imagePreview.src = '/admin/storage/uploads/' + post.featured_image;
-            imagePreview.style.display = 'block';
-            uploadPlaceholder.style.display = 'none';
-        } else {
-            imagePreview.removeAttribute('src');
-            imagePreview.style.display = 'none';
-            uploadPlaceholder.style.display = 'flex';
-        }
-
-        document.getElementById('removeImage').value = '0';
-
-        updateRemoveImageBtn();
-
-        formDirty = false;
-        document.getElementById('postModal').classList.add('open');
-
-        loadPosts();
-    } catch (error) {
-        console.error(error);
-
-        Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Unable to communicate with the server.'
-        });
+        return;
     }
+
 });
 
 // Post form
