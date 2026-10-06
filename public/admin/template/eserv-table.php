@@ -15,7 +15,7 @@ $services = $services ?? [];
             <div class="service-card-top">
                 <div class="service-icon">
                     <?php if (!empty($service['logo'])): ?>
-                        <img src="<?= e('/admin/storage/uploads/' . $service['logo']) ?>" alt="">
+                    <img src="<?= e('/admin/storage/uploads/' . $service['logo']) ?>" alt="">
                     <?php else: ?>
                         <i data-lucide="landmark"></i>
                     <?php endif; ?>

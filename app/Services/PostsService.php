@@ -76,7 +76,7 @@ final class PostsService {
         $filename = null;
 
         if ($postId !== 0) {
-            $existingPost= $repo->fetchPost($postId);
+            $existingPost = $repo->fetchPost($postId);
             
             if (!$existingPost) {
                 jsonResponse(400, 'Post not found.');
@@ -138,10 +138,9 @@ final class PostsService {
     public function filter() {
         $search = trim($_GET['search'] ?? '');
         $filter = $_GET['filter'] ?? 'All';
-        $editingId = (int) ($_GET['editing_id'] ?? 0);
 
         $repo = new PostsRepository(Database::connect());
-        $posts = $repo->fetchFilteredPosts($search, $filter, $editingId);
+        $posts = $repo->fetchFilteredPosts($search, $filter);
 
         ob_start();
 

@@ -104,10 +104,9 @@ final class EservService {
 
     public function search(): void {
         $search = trim($_GET['search'] ?? '');
-        $editingId = (int) ($_GET['editing_id'] ?? 0);
 
         $repo = new EservRepository(Database::connect());
-        $services = $repo->fetchSearchedServices($search, $editingId);
+        $services = $repo->fetchSearchedServices($search);
 
         ob_start();
 

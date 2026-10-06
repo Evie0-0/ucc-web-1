@@ -48,7 +48,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
             <i data-lucide="chevron-down" class="arrow"></i>
         </button>
         <div class="submenu">
-            <a href="Executive-Officials.html">Executive Officials</a>
+            <a href="/admin/exoff.php">Executive Officials</a>
             <a href="/admin/bor.php" >Board of Regents</a>
         </div>
     </div>
@@ -69,12 +69,7 @@ $currentPage = basename($_SERVER['PHP_SELF']);
 </nav>
 
 <div class="sidebar-bottom">
-    <a href="Password.html">
-        <i data-lucide="lock"></i>
-        <span>Password</span>
-    </a>
-
-    <a href="Logout.html">
+    <a href="/admin/logout.php">
         <i data-lucide="log-out"></i>
         <span>Logout</span>
     </a>

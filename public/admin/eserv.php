@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width,initial-scale=1.0">
-	<title>UCC Admin | E-Services</title>
+    <title>UCC Admin | <?= e($pageTitle ?? '') ?></title>
 	<link rel="icon" type="image/png" href="/admin/assets/images/ucc-LOGO.png">
 	<link rel="preconnect" href="https://fonts.googleapis.com">
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -161,161 +161,9 @@ img {
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script> 
 <script>
-let formDirty = false;
-</script>
-<script>
 lucide.createIcons();
 
-/*
-		document.querySelectorAll(".menu-title").forEach(button => {
-			button.addEventListener("click", () => {
-				button.parentElement.classList.toggle("open");
-			});
-		});
-
-		const searchInput = document.getElementById("serviceSearch");
-		const servicesGrid = document.getElementById("servicesGrid");
-		const noServices = document.getElementById("noServices");
-
-		searchInput.addEventListener("input", () => {
-			const query = searchInput.value.toLowerCase().trim();
-			const cards = servicesGrid.querySelectorAll(".service-card");
-			let visible = 0;
-
-			cards.forEach(card => {
-				const text = card.textContent.toLowerCase();
-				const match = text.includes(query);
-
-				card.style.display = match ? "" : "none";
-
-				if (match) {
-					visible++;
-				}
-			});
-
-			noServices.style.display = visible === 0 ? "flex" : "none";
-		});
-
-		const modal = document.getElementById("serviceModal");
-		const modalTitle = document.getElementById("modalTitle");
-		const serviceForm = document.getElementById("serviceForm");
-		const modalClose = document.getElementById("modalClose");
-		const modalCancel = document.getElementById("modalCancel");
-		const addServiceBtn = document.getElementById("addServiceBtn");
-
-		let editingCard = null;
-
-		function openModal(mode, card = null) {
-			editingCard = card;
-
-			modalTitle.textContent = mode === "edit" ? "Edit E-Service" : "Add E-Service";
-
-			if (card) {
-				document.getElementById("serviceName").value = card.querySelector("h3").textContent.trim();
-				document.getElementById("serviceCategory").value = card.querySelector(".service-card-content span").textContent.trim();
-				document.getElementById("serviceDescription").value = card.querySelector(".service-card-content p").textContent.trim();
-				document.getElementById("serviceUrl").value = card.querySelector(".service-card-footer a").getAttribute("href") || "";
-			} else {
-				serviceForm.reset();
-			}
-
-			modal.classList.add("show");
-			modal.setAttribute("aria-hidden", "false");
-			document.body.style.overflow = "hidden";
-		}
-
-		function closeModal() {
-			modal.classList.remove("show");
-			modal.setAttribute("aria-hidden", "true");
-			document.body.style.overflow = "";
-			editingCard = null;
-		}
-
-		addServiceBtn.addEventListener("click", () => openModal("add"));
-		modalClose.addEventListener("click", closeModal);
-		modalCancel.addEventListener("click", closeModal);
-
-		modal.addEventListener("click", event => {
-			if (event.target === modal) {
-				closeModal();
-			}
-		});
-
-		document.addEventListener("keydown", event => {
-			if (event.key === "Escape" && modal.classList.contains("show")) {
-				closeModal();
-			}
-		});
-
-		serviceForm.addEventListener("submit", event => {
-			event.preventDefault();
-
-			const name = document.getElementById("serviceName").value.trim();
-			const category = document.getElementById("serviceCategory").value.trim();
-			const description = document.getElementById("serviceDescription").value.trim();
-			const url = document.getElementById("serviceUrl").value.trim();
-
-			if (editingCard) {
-				editingCard.querySelector("h3").textContent = name;
-				editingCard.querySelector(".service-card-content span").textContent = category;
-				editingCard.querySelector(".service-card-content p").textContent = description;
-				editingCard.querySelector(".service-card-footer a").href = url;
-			} else {
-				const card = document.createElement("article");
-				card.className = "service-card";
-
-				card.innerHTML = `
-					<div class="service-card-top">
-						<div class="service-icon">
-							<i data-lucide="globe"></i>
-						</div>
-						<div class="service-actions">
-							<button class="service-action edit-action" type="button" title="Edit">
-								<i data-lucide="pencil"></i>
-							</button>
-							<button class="service-action delete-action" type="button" title="Delete">
-								<i data-lucide="trash-2"></i>
-							</button>
-						</div>
-					</div>
-					<div class="service-card-content">
-						<h3>${name}</h3>
-						<span>${category}</span>
-						<p>${description}</p>
-					</div>
-					<div class="service-card-footer">
-						<a href="${url}" target="_blank">Visit Website <i data-lucide="arrow-up-right"></i></a>
-					</div>
-				`;
-
-				servicesGrid.appendChild(card);
-				lucide.createIcons();
-			}
-
-			closeModal();
-		});
-
-		servicesGrid.addEventListener("click", event => {
-			const editButton = event.target.closest(".edit-action");
-			const deleteButton = event.target.closest(".delete-action");
-
-			if (editButton) {
-				const card = editButton.closest(".service-card");
-				openModal("edit", card);
-			}
-
-			if (deleteButton) {
-				const card = deleteButton.closest(".service-card");
-				card.remove();
-
-				const remainingCards = servicesGrid.querySelectorAll(".service-card");
-
-				if (remainingCards.length === 0) {
-					noServices.style.display = "flex";
-				}
-			}
-        });
- */
+let formDirty = false;
 
 // Opens modal
 const addServiceBtn = document.getElementById("addServiceBtn");
@@ -410,7 +258,6 @@ document.getElementById('modalCancel').addEventListener('click', closeServiceMod
 // Search
 const serviceSearch = document.getElementById('serviceSearch');
 const applySearch = document.getElementById('applySearch');
-const serviceIdEditing = document.getElementById('serviceId');
 const servicesGrid = document.getElementById('servicesGrid');
 
 async function loadServices() {
@@ -418,7 +265,6 @@ async function loadServices() {
     const params = new URLSearchParams({
         request: 'search',
         search: serviceSearch.value.trim(),
-        editing_id: serviceIdEditing.value
     });
 
     try {
