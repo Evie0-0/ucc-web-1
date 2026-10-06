@@ -402,41 +402,110 @@
 	background: #17472d;
 }
 
-@media (max-width: 1100px) {
-	.services-grid {
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-	}
+
+
+
+
+/* =========================
+   E-SERVICE LOGO UPLOAD
+   ========================= */
+
+.image-upload-area {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-bottom: 18px;
+	width: 100%;
 }
 
-@media (max-width: 760px) {
-	.services-admin {
-		padding: 22px 18px 35px;
-	}
-
-	.services-toolbar {
-		flex-direction: column;
-		align-items: stretch;
-	}
-
-	.services-search {
-		width: auto;
-	}
-
-	.service-add-btn {
-		justify-content: center;
-	}
-
-	.services-grid {
-		grid-template-columns: 1fr;
-	}
+/* "Logo - Upload an image" */
+.upload-placeholder {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex-shrink: 0;
+	color: #26372d;
+	font-size: 14px;
 }
 
-@media (max-width: 480px) {
-	.service-card {
-		padding: 18px;
-	}
-
-	.service-card-content h3 {
-		font-size: 17px;
-	}
+.upload-placeholder svg {
+	width: 27px;
+	height: 27px;
+	color: #123d2c;
+	flex-shrink: 0;
 }
+
+.upload-placeholder strong {
+	font-size: 17px;
+	font-weight: 700;
+}
+
+.upload-placeholder span {
+	font-size: 17px;
+	font-weight: 400;
+}
+
+/* Logo preview */
+.image-preview {
+	width: 70px;
+	height: 70px;
+	object-fit: contain;
+	border: 1px solid #d8d8d0;
+	border-radius: 8px;
+	background: #f8f9f7;
+	padding: 5px;
+	box-sizing: border-box;
+	flex-shrink: 0;
+}
+
+/* Make sure hidden preview is REALLY hidden */
+.image-preview[hidden] {
+	display: none !important;
+}
+
+/* Upload button */
+#uploadImageBtn {
+    margin-left: 90px;
+    height: 38px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 12px;
+    border: 1px solid #cfcfc8;
+    border-radius: 5px;
+    background: #ffffff;
+    color: #26372d;
+    font-family: "DM Sans", sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+#uploadImageBtn:hover {
+	background: #f5f6f3;
+	border-color: #1f5638;
+}
+
+#uploadImageBtn svg {
+	width: 20px;
+	height: 20px;
+}
+
+/* Remove button */
+#removeImageBtn {
+	height: 38px;
+	padding: 0 12px;
+	border: 1px solid #d8d8d0;
+	border-radius: 6px;
+	background: #fff;
+	color: #c33f3f;
+	font-family: "DM Sans", sans-serif;
+	font-size: 13px;
+	cursor: pointer;
+}
+
+#removeImageBtn:hover {
+	background: #fceaea;
+}
+

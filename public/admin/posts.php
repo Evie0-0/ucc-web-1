@@ -81,19 +81,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php require_once __DIR__ . '/template/header.php' ?>
             <section class="posts-page">
                 <div class="posts-toolbar">
-                    <div class="posts-tools-left">
-                        <div class="posts-search">
-                            <input type="search" id="postSearch" placeholder="Search posts..." aria-label="Search posts">
-                            <i data-lucide="search"></i>
-                        </div>
-                        <select id="postFilter" class="posts-filter" aria-label="Filter posts"> 
-                            <option value="All">All</option>
-                            <option value="Published">Published</option>
-                            <option value="Draft">Draft</option>
-                            <option value="Pending">Pending</option>
-                        </select>
-                        <button type="button" id="applyPostFilter">Search</button>
+                <div class="posts-tools-left">
+                    <div class="posts-search">
+                        <input type="search" id="postSearch" placeholder="Search posts..." aria-label="Search posts">
+                        <i data-lucide="search"></i>
                     </div>
+
+                    <select id="postFilter" class="posts-filter" aria-label="Filter posts">
+                        <option value="All">All</option>
+                        <option value="Published">Published</option>
+                        <option value="Draft">Draft</option>
+                        <option value="Pending">Pending</option>
+                    </select>
+                </div>
                     <button class="post-btn post-btn-primary" id="addPostBtn" type="button">
                         <i data-lucide="plus"></i> Add New Post
                     </button>
@@ -315,7 +315,28 @@ async function loadPosts() {
     }
 }
 
-applyPostFilter.addEventListener('click', loadPosts);
+//Filter
+let searchTimeout;
+
+postSearch.addEventListener('input', () => {
+	clearTimeout(searchTimeout);
+
+	searchTimeout = setTimeout(() => {
+		loadPosts();
+	}, 300);
+});
+
+postSearch.addEventListener('keydown', (event) => {
+	if (event.key === 'Enter') {
+		event.preventDefault();
+		clearTimeout(searchTimeout);
+		loadPosts();
+	}
+});
+
+postFilter.addEventListener('change', () => {
+	loadPosts();
+});
 
 // Close modal / discard editing
 function closePostModal() {

@@ -15,10 +15,11 @@
 .posts-tools-left {
     display:flex;
     align-items:center;
-    gap:12px;flex:1;
+    gap:30px;
+    flex:1;
     min-width:0;
     height:48px
-    }
+}
 
 .posts-search {
     position: relative;
@@ -52,16 +53,22 @@
     height: 18px;
 }
 .posts-filter {
-    height:48px;
-    box-sizing:border-box;
-    padding:0 38px 0 16px;
-    min-width:150px;
-    border:1px solid #e8e3d8;
-    border-radius:16px;
-    background:#fff;
-    color:#0d2a21;
-    font:500 14px "DM Sans",sans-serif
-    }
+	height:48px;
+	box-sizing:border-box;
+	padding:0 42px 0 16px;
+	min-width:150px;
+	border:1px solid #e8e3d8;
+	border-radius:16px;
+	background:#fff;
+	color:#0d2a21;
+	font:500 14px "DM Sans",sans-serif;
+	appearance:none;
+	-webkit-appearance:none;
+	background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%230d2a21' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+	background-repeat:no-repeat;
+	background-position:right 14px center;
+	background-size:16px;
+}
 
 .post-btn {
     height:48px;

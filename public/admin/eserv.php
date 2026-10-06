@@ -81,17 +81,17 @@ img {
 		<main class="main-content">
             <?php require_once __DIR__ . '/template/header.php' ?>
 			<section class="services-admin">
-				<div class="services-toolbar">
-					<div class="services-search">
-						<i data-lucide="search"></i>
-                        <input type="text" id="serviceSearch" placeholder="Search e-services...">
-					</div>
-                    <button type="button" id="applySearch">Search</button>
-					<button class="service-add-btn" type="button" id="addServiceBtn">
-						<i data-lucide="plus"></i>
-						Add E-Service
-					</button>
-				</div>
+            <div class="services-toolbar">
+                <div class="services-search">
+                    <i data-lucide="search"></i>
+                    <input type="search" id="serviceSearch" placeholder="Search e-services..." autocomplete="off">
+                </div>
+
+                <button class="service-add-btn" type="button" id="addServiceBtn">
+                    <i data-lucide="plus"></i>
+                    Add E-Service
+                </button>
+            </div>
 
                 <div class="services-grid" id="servicesGrid">
                     <?php require __DIR__ . '/template/eserv-table.php'; ?>
@@ -118,17 +118,39 @@ img {
                 <input type="hidden" name="remove_image" value="0" id="removeImage">
 
                 <div class="image-upload-area">
+
                     <div class="upload-placeholder" id="uploadPlaceholder">
                         <i data-lucide="image-plus"></i>
                         <strong>Logo</strong>
                         <span>Upload an image</span>
                     </div>
-                    <img id="imagePreview" class="image-preview" alt="Logo preview">
-                    <input type="file" name="logo" id="logoImage" accept="image/jpeg,image/png,image/webp" hidden>
-                    <button type="button" class="post-btn post-btn-ghost" id="uploadImageBtn">
-                        <i data-lucide="upload"></i> Upload Image
+
+                    <img
+                        id="imagePreview"
+                        class="image-preview"
+                        alt="Logo preview"
+                        hidden>
+
+                    <input
+                        type="file"
+                        name="logo"
+                        id="logoImage"
+                        accept="image/jpeg,image/png,image/webp"
+                        hidden>
+
+                    <button
+                        type="button"
+                        id="uploadImageBtn">
+                        <i data-lucide="upload"></i>
+                        Upload Image
                     </button>
-                    <button type="button" id="removeImageBtn" hidden>Remove Image</button>
+
+                    <button
+                        type="button"
+                        id="removeImageBtn"
+                        hidden>
+                        Remove Image
+                    </button>
                 </div>
 
 				<div class="form-group">
@@ -336,7 +358,7 @@ const removeImageBtn = document.getElementById('removeImageBtn');
 const removeImage = document.getElementById('removeImage');
 
 function updateRemoveImageBtn() {
-    removeImageBtn.hidden = !imagePreview.getAttribute('src');
+    removeImageBtn.hidden = imagePreview.hidden || !imagePreview.src;
 }
 
 updateRemoveImageBtn();
@@ -353,8 +375,10 @@ logoImage.addEventListener('change', () => {
     }
 
     formDirty = true;
+
     imagePreview.src = URL.createObjectURL(file);
-    imagePreview.style.display = 'block';
+    imagePreview.hidden = false;
+
     uploadPlaceholder.style.display = 'none';
     removeImage.value = '0';
 
@@ -364,13 +388,16 @@ logoImage.addEventListener('change', () => {
 removeImageBtn.addEventListener('click', () => {
     logoImage.value = '';
     imagePreview.removeAttribute('src');
-    imagePreview.style.display = 'none';
+    imagePreview.hidden = true;
+
     uploadPlaceholder.style.display = 'flex';
     removeImage.value = '1';
     formDirty = true;
 
     updateRemoveImageBtn();
 });
+
+
 
 // Dirty checker
 const serviceForm = document.getElementById('serviceForm');
@@ -409,49 +436,45 @@ document.getElementById('modalCancel').addEventListener('click', closeServiceMod
 
 // Search
 const serviceSearch = document.getElementById('serviceSearch');
-const applySearch = document.getElementById('applySearch');
 const serviceIdEditing = document.getElementById('serviceId');
 const servicesGrid = document.getElementById('servicesGrid');
+let searchTimer;
 
 async function loadServices() {
-
-    const params = new URLSearchParams({
-        request: 'search',
-        search: serviceSearch.value.trim(),
-        editing_id: serviceIdEditing.value
-    });
-
-    try {
-        const response = await fetch(`eserv.php?${params}`);
-
-        if (!response.ok) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'Failed to load e-services.'
-            });
-
-            return;
-        }
-
-        const result = await response.json();
-
-        servicesGrid.innerHTML = result.html;
-
-        lucide.createIcons();
-
-    } catch (error) {
-        console.error(error);
-
-        Swal.fire({
-            icon: 'error',
-            title: 'Connection Error',
-            text: 'Unable to communicate with the server.'
-        });
-    }
+	const params = new URLSearchParams({
+		request:'search',
+		search:serviceSearch.value.trim(),
+		editing_id:serviceIdEditing.value
+	});
+	try {
+		const response = await fetch(`eserv.php?${params}`);
+		if (!response.ok) {
+			Swal.fire({
+				icon:'error',
+				title:'Error',
+				text:'Failed to load e-services.'
+			});
+			return;
+		}
+		const result = await response.json();
+		servicesGrid.innerHTML = result.html;
+		lucide.createIcons();
+	} catch (error) {
+		console.error(error);
+		Swal.fire({
+			icon:'error',
+			title:'Connection Error',
+			text:'Unable to communicate with the server.'
+		});
+	}
 }
 
-applySearch.addEventListener('click', loadServices);
+serviceSearch.addEventListener('input',() => {
+	clearTimeout(searchTimer);
+	searchTimer = setTimeout(() => {
+		loadServices();
+	},300);
+});
 
 // Edit
 servicesGrid.addEventListener('click', async (event) => {
@@ -553,11 +576,11 @@ servicesGrid.addEventListener('click', async (event) => {
 
             if (service.logo) {
                 imagePreview.src = '/admin/storage/uploads/' + service.logo;
-                imagePreview.style.display = 'block';
+                imagePreview.hidden = false;
                 uploadPlaceholder.style.display = 'none';
             } else {
                 imagePreview.removeAttribute('src');
-                imagePreview.style.display = 'none';
+                imagePreview.hidden = true;
                 uploadPlaceholder.style.display = 'flex';
             }
 
