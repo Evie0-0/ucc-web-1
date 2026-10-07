@@ -40,7 +40,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             jsonResponse(400, 'Invalid request.');
     }
 
-
 } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
     if (isset($_GET['request'])) {
         $request = $_GET['request'];
@@ -214,7 +213,7 @@ document.getElementById('addPostBtn').addEventListener('click', () => {
     document.getElementById('postModal').classList.add('open');
 });
 
-// Upload image preview and remove image preview
+// Upload image and remove image
 const uploadImageBtn = document.getElementById('uploadImageBtn');
 const featuredImage = document.getElementById('featuredImage');
 const imagePreview = document.getElementById('imagePreview');
@@ -274,7 +273,6 @@ postForm.addEventListener('change', () => {
 const postSearch = document.getElementById('postSearch');
 const postFilter = document.getElementById('postFilter');
 const applyPostFilter = document.getElementById('applyPostFilter');
-const postIdEditing = document.getElementById('postId');
 const postsTableBody = document.getElementById('postsTableBody');
 const postsCount = document.getElementById('postsCount');
 
@@ -283,7 +281,6 @@ async function loadPosts() {
         request: 'filter',
         search: postSearch.value.trim(),
         filter: postFilter.value,
-        editing_id: postIdEditing.value
     });
 
     try {

@@ -86,7 +86,7 @@ final class PostsRepository {
         return;
     }
 
-    public function fetchFilteredPosts(string $search = '', string $filter = 'All', int $editingId = 0): array {
+    public function fetchFilteredPosts(string $search = '', string $filter = 'All'): array {
         $query = "SELECT posts.*, categories.name AS category,
             CASE 
                 WHEN posts.status = 'draft' THEN 'Draft'
@@ -99,12 +99,6 @@ final class PostsRepository {
             AND posts.archived_at is NULL
             AND posts.active = 1";
         $params = [];
-
-        // Do not show post current being edited
-        if ($editingId > 0) {
-            $query .= ' AND posts.id != :editing_id';
-            $params['editing_id'] = $editingId;
-        }
 
         if ($search !== '') {
             $query .= ' AND posts.title LIKE :search';
