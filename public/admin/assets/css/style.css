@@ -1602,5 +1602,14 @@ body.modal-open{
 }
 
 
+.menu-group.active > .menu-title{
+	color:var(--green);
+	background:#f3f7f4;
+}
+.menu-group.active > .menu-title i{
+	color:var(--green);
+}
+
+
 
 
